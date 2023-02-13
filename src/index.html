@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://kit.fontawesome.com/ca79ff3647.js" crossorigin="anonymous"></script>
+    <title>Socket IO</title> 
+</head>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Caveat+Brush&display=swap');
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Caveat Brush', cursive;
+    background: #252734;
+    color: #ebebec;
+    width: 100%;
+    height: 100vh;
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    display: block;
+    position: relative;
+    width: 50%;
+    height: 70%;
+    margin: 0 auto;
+    margin-top: 3em;
+    background: #333646;
+    border-radius: 2em;
+    overflow-y: auto;
+    margin-bottom: 1em;
+}
+
+.message {
+    background-color: #ffaf29;
+    width: 35%;
+    padding: 1em;
+    margin: 1em;
+    border: 0.2em solid #333646;
+    border-radius: 1em 1em 1em 0;
+}
+
+.left {
+    float: left;
+    clear: both;
+    border-radius: 1em 1em 1em 0;
+}
+
+.right {
+    float: right;
+    clear: both;
+    border-radius: 1em 1em 0 1em;
+}
+
+
+
+#send-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 1em;
+    margin: auto;
+    width: 50%;
+}
+
+.submit {
+    background: none;
+    color: #ccc;
+    margin: 0;
+    border: none;
+    border-radius: 1em;
+    outline: none;
+    transition: 0.4s;
+    padding: .5em;
+}
+
+
+.submit:hover {
+    background: #ffaf29 !important;
+    border-radius: 1em;
+    color: #ccc;
+}
+
+
+#messageInp {
+    background: none;
+    border: none;
+    border-bottom: 2px solid #ffaf29;
+    width: 90%;
+    color: #ccc;
+    font-family: 'Caveat Brush', cursive;
+    font-size: 2em;
+}
+
+#messageInp:focus {
+    outline: none;
+}
+
+#messageInp::placeholder {
+    color: #ccc;
+}
+
+</style>
+
+<body>
+    <div class="container">
+    </div>
+
+    <div class="send">
+        <form action="#" id="send-container">
+            <input type="text" name="messageInp" id="messageInp">
+            <button class="submit" type="submit">
+                <i class="fa-regular fa-paper-plane fa-3x"></i>
+            </button>
+        </form>
+    </div>
+
+    <script src="socket.io/socket.io.js"></script>
+
+    <script>
+        const socket = io();
+
+        socket.on("connect", () => {
+            console.log(socket.id);
+        })
+
+
+        socket.on("server", msg => {
+            console.log(msg);
+        })
+
+
+
+        const form = document.getElementById('send-container');
+        const messageInput = document.getElementById('messageInp');
+        const messageContainer = document.querySelector(".container");
+
+
+        const userName = prompt("Enter your name to join!");
+        socket.emit('new-user-joined', userName);
+
+        // on user joined
+        socket.on('user-joined', userName => {
+            append(userName + ' : joined the chat.', 'left');
+        })
+
+
+
+        socket.on('receive', data => {
+            append(data.name + " : " + data.message, 'left');
+        })
+
+        socket.on('left', user => {
+            append(user + " : left the chat", 'left');
+        })
+
+
+
+        const append = (message, position) => {
+            const messageElement = document.createElement('div');
+            messageElement.innerHTML = message;
+            messageElement.classList.add('message');
+            messageElement.classList.add(position);
+            messageContainer.append(messageElement);
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = messageInput.value;
+            if (message === "") return;
+
+            append("you : " + message + "", 'right');
+            messageInput.value = "";
+
+            socket.emit('send', message);
+        })
+    </script>
+
+
+</body>
+</html>
